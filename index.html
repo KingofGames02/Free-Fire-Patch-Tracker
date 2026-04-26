@@ -34,6 +34,25 @@
             padding: 40px 10px;
         }
 
+        .loader-container {
+            position: fixed; inset: 0; background: rgba(4, 13, 31, 0.95);
+            display: flex; justify-content: center; align-items: center;
+            z-index: 9999; flex-direction: column; gap: 20px;
+            transition: opacity 0.4s ease;
+        }
+        .loader {
+            width: 50px; height: 50px; border: 5px solid var(--border);
+            border-top-color: var(--green); border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        .loader-text { 
+            color: var(--green); font-weight: 800; letter-spacing: 2px; 
+            animation: pulseGlow 1.5s infinite; font-size: 1.1rem; text-transform: uppercase;
+        }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        @keyframes pulseGlow { 0% { opacity: 0.7; } 50% { opacity: 1; text-shadow: 0 0 10px var(--green); } 100% { opacity: 0.7; } }
+        .hidden { display: none !important; }
+
         .header-container { text-align: center; margin-bottom: 30px; width: 100%; display: flex; flex-direction: column; align-items: center; }
         
         .main-title {
@@ -135,6 +154,11 @@
 </head>
 <body>
 
+    <div id="loadingOverlay" class="loader-container">
+        <div class="loader"></div>
+        <div class="loader-text" id="txtProcessing">PROCESSING...</div>
+    </div>
+
     <div class="header-container">
         <h1 class="main-title" id="txt-title">Free Fire Patch Tracker</h1>
         <div class="sub-title" id="txt-by">Made By King of Games</div>
@@ -188,7 +212,7 @@
 
 <script>
     const START_OB = 54;
-    const START_DATE = new Date("2026-06-24T06:00:00+03:00");
+    const START_DATE = new Date("2026-06-24T06:30:00+03:00");
     
     let baseUpcomingOB = 54;
     let currentViewOB = 54;
@@ -199,12 +223,14 @@
         en: { 
             title: "Free Fire Patch Tracker", by: "Made By King of Games", btnLang: "Arabic", 
             days: "Days", hours: "Hours", mins: "Mins", secs: "Secs", info: "Scheduled on:",
-            note: "Note: Calculated patch dates are highly accurate but remain subject to change if officials decide to deploy early or late."
+            note: "Note: Calculated patch dates are highly accurate but remain subject to change if officials decide to deploy early or late.",
+            processing: "PROCESSING..."
         },
         ar: { 
             title: "متتبع تحديثات فري فاير", by: "تطوير King of Games", btnLang: "English", 
             days: "أيام", hours: "ساعات", mins: "دقائق", secs: "ثواني", info: "الموعد المقرر:",
-            note: "ملاحظة: تواريخ التحديثات المحسوبة دقيقة للغاية ولكنها تظل عرضة للتغيير في حال قرر المسؤولون الإطلاق مبكراً أو متأخراً."
+            note: "ملاحظة: تواريخ التحديثات المحسوبة دقيقة للغاية ولكنها تظل عرضة للتغيير في حال قرر المسؤولون الإطلاق مبكراً أو متأخراً.",
+            processing: "جاري المعالجة..."
         }
     };
 
@@ -253,12 +279,20 @@
         return date;
     }
 
+    function hideLoading() {
+        const overlay = document.getElementById('loadingOverlay');
+        overlay.style.opacity = '0';
+        setTimeout(() => overlay.classList.add('hidden'), 400);
+    }
+
     function init() {
         const params = new URLSearchParams(window.location.search);
         if (params.get('lang') === 'ar') {
             currentLang = 'ar';
             document.documentElement.dir = 'rtl';
         }
+        
+        document.getElementById('txtProcessing').innerText = langDict[currentLang].processing;
 
         setupDownloadLinks();
 
@@ -270,6 +304,8 @@
 
         applyLang();
         startTracker();
+        
+        setTimeout(hideLoading, 600);
     }
 
     function changeUpdate(step) {
@@ -351,6 +387,7 @@
         document.getElementById('lbl-mins').innerText = t.mins;
         document.getElementById('lbl-secs').innerText = t.secs;
         document.getElementById('txt-note').innerText = t.note;
+        document.getElementById('txtProcessing').innerText = t.processing;
     }
 
     window.onload = init;
